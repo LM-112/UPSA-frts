@@ -1,0 +1,30 @@
+<div class="nav-section">Overview</div>
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint=='admin.dashboard' %}active{% endif %}">
+  <i class="bi bi-grid-1x2"></i> Dashboard
+</a>
+<div class="nav-section">Management</div>
+<a href="{{ url_for('admin.students') }}" class="nav-item {% if 'student' in (request.endpoint or '') %}active{% endif %}">
+  <i class="bi bi-people"></i> Students
+</a>
+<a href="{{ url_for('admin.lecturers') }}" class="nav-item {% if 'lecturer' in (request.endpoint or '') %}active{% endif %}">
+  <i class="bi bi-person-badge"></i> Lecturers
+</a>
+<a href="{{ url_for('admin.courses') }}" class="nav-item {% if 'course' in (request.endpoint or '') %}active{% endif %}">
+  <i class="bi bi-journal-bookmark"></i> Courses
+</a>
+<a href="{{ url_for('admin.sessions') }}" class="nav-item {% if request.endpoint=='admin.sessions' %}active{% endif %}">
+  <i class="bi bi-calendar3"></i> Sessions
+</a>
+<a href="{{ url_for('admin.devices') }}" class="nav-item {% if request.endpoint=='admin.devices' %}active{% endif %}">
+  <i class="bi bi-camera"></i> Devices
+</a>
+<div class="nav-section">Reports</div>
+<a href="{{ url_for('admin.attendance') }}" class="nav-item {% if request.endpoint=='admin.attendance' %}active{% endif %}">
+  <i class="bi bi-table"></i> Attendance Records
+</a>
+<a href="{{ url_for('admin.reports') }}" class="nav-item {% if request.endpoint=='admin.reports' %}active{% endif %}">
+  <i class="bi bi-bar-chart-line"></i> Reports
+</a>
+<a href="{{ url_for('admin.alerts') }}" class="nav-item {% if request.endpoint=='admin.alerts' %}active{% endif %}">
+  <i class="bi bi-bell"></i> Absence Alerts
+</a>

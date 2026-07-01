@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Attendance Records — Admin{% endblock %}
+{% block sidebar %}{% include "admin/_sidebar.html" %}{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3" style="color:var(--upsa-navy);">Attendance Records</h3>
+
+<!-- Filters -->
+<div class="card" style="border-radius:10px;">
+  <div class="card-body py-2 px-3">
+    <form method="GET" class="d-flex gap-2 flex-wrap align-items-end">
+      <div>
+        <label class="form-label mb-1" style="font-size:.78rem;font-weight:600;">Course</label>
+        <select name="course_id" class="form-select form-select-sm" style="min-width:180px;">
+          <option value="">All Courses</option>
+          {% for c in courses %}
+          <option value="{{ c.id }}" {% if sel_course==c.id|string %}selected{% endif %}>{{ c.code }} — {{ c.title[:25] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label mb-1" style="font-size:.78rem;font-weight:600;">Group</label>
+        <select name="group" class="form-select form-select-sm" style="min-width:100px;">
+          <option value="">All</option>
+          {% for g in groups %}
+          <option value="{{ g }}" {% if sel_group==g %}selected{% endif %}>{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label mb-1" style="font-size:.78rem;font-weight:600;">From</label>
+        <input type="date" name="from_date" value="{{ from_date }}" class="form-control form-control-sm">
+      </div>
+      <div>
+        <label class="form-label mb-1" style="font-size:.78rem;font-weight:600;">To</label>
+        <input type="date" name="to_date" value="{{ to_date }}" class="form-control form-control-sm">
+      </div>
+      <button class="btn btn-primary btn-sm px-3">Filter</button>
+      <a href="{{ url_for('admin.attendance') }}" class="btn btn-light btn-sm">Reset</a>
+    </form>
+  </div>
+</div>
+
+<!-- Summary row -->
+<div class="row g-3 mb-3">
+  <div class="col-3"><div class="card kpi-card kpi-blue shadow-sm text-center py-2">
+    <div class="kpi-num" style="color:var(--upsa-navy);font-size:1.4rem;">{{ summary.total }}</div>
+    <div class="kpi-label">Total Records</div>
+  </div></div>
+  <div class="col-3"><div class="card kpi-card kpi-green shadow-sm text-center py-2">
+    <div class="kpi-num text-success" style="font-size:1.4rem;">{{ summary.present }}</div>
+    <div class="kpi-label">Present</div>
+  </div></div>
+  <div class="col-3"><div class="card kpi-card kpi-amber shadow-sm text-center py-2">
+    <div class="kpi-num text-warning" style="font-size:1.4rem;">{{ summary.late }}</div>
+    <div class="kpi-label">Late</div>
+  </div></div>
+  <div class="col-3"><div class="card kpi-card kpi-red shadow-sm text-center py-2">
+    <div class="kpi-num text-danger" style="font-size:1.4rem;">{{ summary.absent }}</div>
+    <div class="kpi-label">Absent</div>
+  </div></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="data-table" style="font-size:.83rem;">
+      <thead><tr>
+        <th>Date</th><th>Course</th><th>Index No.</th><th>Student Name</th>
+        <th>Programme</th><th>Group</th><th>Level</th>
+        <th>Status</th><th>Time In</th><th>Mins Late</th><th>Similarity</th><th>Source</th>
+      </tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td style="white-space:nowrap;">{{ r.session_date }}</td>
+          <td><strong>{{ r.course_code }}</strong><br>
+            <span class="text-muted" style="font-size:.75rem;">{{ r.course_title[:22] }}</span></td>
+          <td><code>{{ r.index_number }}</code></td>
+          <td class="fw-semibold">{{ r.student_name }}</td>
+          <td style="font-size:.78rem;">{{ r.prog_code or "—" }}</td>
+          <td>{% if r.group_name %}<span class="badge bg-secondary">{{ r.group_name }}</span>{% else %}—{% endif %}</td>
+          <td>{% if r.level %}<span class="badge bg-light text-dark border">Lvl {{ r.level }}</span>{% else %}—{% endif %}</td>
+          <td>
+            {% if r.status=="present" %}<span class="badge badge-present">Present</div>
+            {% elif r.status=="late"  %}<span class="badge badge-late">Late</div>
+            {% elif r.status=="excused"%}<span class="badge badge-excused">Excused</div>
+            {% else %}<span class="badge badge-absent">Absent</span>{% endif %}
+          </td>
+          <td>{{ r.check_in_time[11:16] if r.check_in_time else "—" }}</td>
+          <td class="text-center">
+            {% if r.minutes_late %}<span class="text-warning fw-bold">{{ r.minutes_late }} min</span>{% else %}—{% endif %}
+          </td>
+          <td>{{ "%.0f%%"|format(r.similarity_score*100) if r.similarity_score else "—" }}</td>
+          <td><span class="badge bg-light text-dark border" style="font-size:.7rem;">{{ r.source or "terminal" }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="12" class="text-center text-muted py-4">No records found for selected filters</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

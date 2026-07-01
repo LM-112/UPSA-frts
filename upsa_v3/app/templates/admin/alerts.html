@@ -1,0 +1,32 @@
+
+{% extends "base.html" %}
+{% block title %}Absence Alerts — Admin{% endblock %}
+{% block sidebar %}<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="bi bi-speedometer2"></i>Dashboard</a>
+<a href="{{ url_for('admin.courses') }}" class="nav-item"><i class="bi bi-book"></i>Courses</a>
+<a href="{{ url_for('admin.sessions') }}" class="nav-item"><i class="bi bi-calendar3"></i>Sessions</a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="bi bi-people"></i>Students</a>
+<a href="{{ url_for('admin.devices') }}" class="nav-item"><i class="bi bi-camera"></i>Devices</a>
+<a href="{{ url_for('admin.reports') }}" class="nav-item"><i class="bi bi-file-excel"></i>Reports</a>
+<a href="{{ url_for('admin.alerts') }}" class="nav-item"><i class="bi bi-bell"></i>Alerts</a>{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4" style="color:var(--upsa-navy);">Absence Alerts</h3>
+<p class="text-muted mb-4">Students flagged for 2 or more consecutive absences.</p>
+{% if alerts %}
+<div class="row g-3">
+  {% for a in alerts %}
+  <div class="col-md-6">
+    <div class="alert-card">
+      <div class="alert-card-title">Student ID: {{ a.index_number }} | Course: {{ a.course_code }}</div>
+      <div class="alert-card-sub">{{ a.full_name }} &bull; Group: {{ a.group_name or '—' }} &bull; Level: {{ a.level or '—' }}</div>
+      <div class="alert-card-sub mt-1">{{ a.consecutive_absences }} consecutive absences — <em>{{ a.course_title }}</em></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-check-circle-fill text-success" style="font-size:3rem;"></i>
+  <p class="text-muted mt-3">No absence alerts at this time.</p>
+</div>
+{% endif %}
+{% endblock %}

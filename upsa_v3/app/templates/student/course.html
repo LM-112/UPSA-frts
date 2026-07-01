@@ -1,0 +1,89 @@
+
+{% extends "base.html" %}
+{% block title %}{{ course.code }} — My Attendance{% endblock %}
+{% block sidebar %}<div class="nav-section">My Account</div>
+<a href="{{ url_for('student.dashboard') }}" class="nav-item active"><i class="bi bi-person-circle"></i>My Profile</a>
+<a href="{{ url_for('student.dashboard') }}" class="nav-item"><i class="bi bi-bar-chart-line"></i>Attendance</a>
+<div class="nav-section">Courses</div>
+<a href="{{ url_for('student.dashboard') }}" class="nav-item" style="font-size:.8rem;padding-left:24px;">
+  <i class="bi bi-arrow-left"></i>Back to My Courses
+</a>
+<div class="nav-section">Consent</div>
+<a href="{{ url_for('student.dashboard') }}#consent" class="nav-item"><i class="bi bi-shield-check"></i>Biometric Consent</a>{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="fw-bold mb-0" style="color:var(--upsa-navy);">{{ course.code }} — {{ course.title }}</h3>
+    <div class="text-muted small">
+      {{ course.lec_title or '' }} {{ course.lecturer_name or '—' }} &bull;
+      {{ course.credit_hours }} credits &bull; Semester {{ course.semester }} &bull; {{ course.academic_year }}
+    </div>
+  </div>
+  <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-3"><div class="card kpi-card kpi-green shadow-sm text-center">
+    <div class="kpi-num text-success">{{ present }}</div><div class="kpi-label">Present</div>
+  </div></div>
+  <div class="col-3"><div class="card kpi-card kpi-amber shadow-sm text-center">
+    <div class="kpi-num text-warning">{{ late }}</div><div class="kpi-label">Late</div>
+  </div></div>
+  <div class="col-3"><div class="card kpi-card kpi-red shadow-sm text-center">
+    <div class="kpi-num text-danger">{{ total - present - late }}</div><div class="kpi-label">Absent</div>
+  </div></div>
+  <div class="col-3"><div class="card kpi-card kpi-blue shadow-sm text-center">
+    <div class="kpi-num" style="color:var(--upsa-navy);">{{ rate }}%</div><div class="kpi-label">Rate</div>
+  </div></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr>
+        <th>Date</th><th>Day</th><th>Time</th><th>Venue / Room</th><th>Type</th>
+        <th>Status</th><th>Time In</th><th>Mins Late</th><th>Similarity</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        {% set status = r.status or 'absent' %}
+        <tr>
+          <td class="fw-semibold" style="font-size:.85rem;">{{ r.session_date }}</td>
+          <td class="text-muted" style="font-size:.82rem;">
+            {% set days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+            {% set dval = namespace(v='') %}
+            {{ r.session_date }}
+          </td>
+          <td style="font-size:.82rem;white-space:nowrap;">{{ r.start_time[:5] }}–{{ r.end_time[:5] }}</td>
+          <td style="font-size:.82rem;">{{ r.venue or '—' }} {{ r.room or '' }}</td>
+          <td><span class="badge bg-light text-dark border" style="font-size:.7rem;">{{ r.session_type or 'regular' }}</span></td>
+          <td>
+            {% if status == 'present' %}<span class="badge badge-present">Present</div>
+            {% elif status == 'late' %}<span class="badge badge-late">Late</div>
+            {% elif status == 'excused' %}<span class="badge badge-excused">Excused</div>
+            {% else %}<span class="badge badge-absent">Absent</div>
+            {% endif %}
+          </td>
+          <td class="text-muted" style="font-size:.82rem;">
+            {{ r.check_in_time[11:16] if r.check_in_time else '—' }}
+          </td>
+          <td class="text-center">
+            {% if r.minutes_late and r.minutes_late > 0 %}
+              <span class="text-warning fw-bold">{{ r.minutes_late }} min</div>
+            {% elif status == 'present' %}<span class="text-success">On time</div>
+            {% else %}—
+            {% endif %}
+          </td>
+          <td>
+            {% if r.similarity_score %}{'%.0f%%'|format(r.similarity_score*100)}{% else %}—{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center text-muted py-4">No sessions recorded</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

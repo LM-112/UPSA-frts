@@ -1,0 +1,44 @@
+
+{% extends "base.html" %}
+{% block title %}Sessions — Admin{% endblock %}
+{% block sidebar %}<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="bi bi-speedometer2"></i>Dashboard</a>
+<a href="{{ url_for('admin.courses') }}" class="nav-item"><i class="bi bi-book"></i>Courses</a>
+<a href="{{ url_for('admin.sessions') }}" class="nav-item"><i class="bi bi-calendar3"></i>Sessions</a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="bi bi-people"></i>Students</a>
+<a href="{{ url_for('admin.devices') }}" class="nav-item"><i class="bi bi-camera"></i>Devices</a>
+<a href="{{ url_for('admin.reports') }}" class="nav-item"><i class="bi bi-file-excel"></i>Reports</a>
+<a href="{{ url_for('admin.alerts') }}" class="nav-item"><i class="bi bi-bell"></i>Alerts</a>{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0" style="color:var(--upsa-navy);">Class Sessions</h3>
+  <form method="GET" class="d-flex gap-2">
+    <input type="date" name="date" value="{{ filter_date }}" class="form-control" style="max-width:180px;">
+    <button class="btn btn-primary">View</button>
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>Course</th><th>Group</th><th>Venue / Room</th><th>Time</th><th>Type</th><th>Enrolled</th><th>Present</th><th>Late</th><th>Absent</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td><strong>{{ s.code }}</strong><br><span class="text-muted" style="font-size:.78rem;">{{ s.title[:28] }}</span></td>
+          <td>{% if s.group_filter %}<span class="badge bg-secondary">{{ s.group_filter }}</span>{% else %}<span class="text-muted">All</span>{% endif %}</td>
+          <td>{{ s.venue or '—' }} {{ s.room or '' }}</td>
+          <td style="font-size:.82rem;white-space:nowrap;">{{ s.start_time[:5] }}–{{ s.end_time[:5] }}</td>
+          <td><span class="badge bg-light text-dark border" style="font-size:.72rem;">{{ s.session_type or 'regular' }}</span></td>
+          <td class="text-center fw-bold">{{ s.enrolled or 0 }}</td>
+          <td class="text-center text-success fw-bold">{{ s.cnt_present or 0 }}</td>
+          <td class="text-center text-warning fw-bold">{{ s.cnt_late or 0 }}</td>
+          <td class="text-center text-danger fw-bold">{{ s.cnt_absent or 0 }}</td>
+          <td>{% if s.is_open %}<span class="status-open">Active</span>{% else %}<span class="status-closed">Closed</span>{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="10" class="text-center text-muted py-4">No sessions for this date</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

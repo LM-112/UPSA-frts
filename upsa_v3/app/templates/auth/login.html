@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Sign In — UPSA FRT Attendance{% endblock %}
+{% block content %}
+<div style="display:flex;width:100vw;min-height:100vh;">
+
+  <!-- LEFT — UPSA Navy Panel -->
+  <div style="flex:1;background:#002147;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 48px;position:relative;overflow:hidden;">
+
+    <!-- Background circles decoration -->
+    <div style="position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(200,154,42,.06);"></div>
+    <div style="position:absolute;bottom:-60px;left:-60px;width:250px;height:250px;border-radius:50%;background:rgba(200,154,42,.05);"></div>
+
+    <!-- UPSA Logo — full with white text -->
+    <img src="{{ url_for('static', filename='images/upsa_logo_white.png') }}"
+         alt="UPSA Logo"
+         style="width:260px;object-fit:contain;margin-bottom:40px;">
+
+    <div style="border-top:1px solid rgba(200,154,42,.3);width:60px;margin-bottom:36px;"></div>
+
+    <h2 style="color:#fff;font-size:1.4rem;font-weight:800;text-align:center;line-height:1.4;margin-bottom:12px;">
+      Face Recognition Based<br>Student Attendance System
+    </h2>
+    <p style="color:rgba(255,255,255,.45);font-size:.85rem;text-align:center;max-width:320px;line-height:1.7;">
+      Automated attendance tracking powered by biometric face recognition technology
+    </p>
+
+
+  </div>
+
+  <!-- RIGHT — Login Form -->
+  <div style="width:460px;flex-shrink:0;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:60px 48px;">
+
+    <div style="margin-bottom:36px;">
+      <h3 style="font-size:1.6rem;font-weight:800;color:#002147;margin-bottom:6px;">Welcome Back 👋</h3>
+      <p style="font-size:.85rem;color:#6b7280;">Sign in to access the attendance portal</p>
+    </div>
+
+    {% if error %}
+    <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:.83rem;margin-bottom:16px;">
+      <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:#002147;margin-bottom:6px;">Email Address</label>
+        <div style="position:relative;">
+          <i class="bi bi-envelope" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
+          <input type="email" name="email"
+                 style="width:100%;padding:11px 14px 11px 36px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.85rem;font-family:inherit;outline:none;transition:border-color .15s;"
+                 placeholder="yourname@upsa.edu.gh" required autofocus
+                 onfocus="this.style.borderColor='#002147'"
+                 onblur="this.style.borderColor='#e5e7eb'">
+        </div>
+      </div>
+
+      <div style="margin-bottom:28px;">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:#002147;margin-bottom:6px;">Password</label>
+        <div style="position:relative;">
+          <i class="bi bi-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
+          <input type="password" name="password" id="pwdInput"
+                 style="width:100%;padding:11px 40px 11px 36px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.85rem;font-family:inherit;outline:none;transition:border-color .15s;"
+                 placeholder="Enter your password" required
+                 onfocus="this.style.borderColor='#002147'"
+                 onblur="this.style.borderColor='#e5e7eb'">
+          <i class="bi bi-eye" id="eyeIcon"
+             style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#9ca3af;cursor:pointer;font-size:.85rem;"
+             onclick="togglePwd()"></i>
+        </div>
+      </div>
+
+      <button type="submit"
+              style="width:100%;padding:12px;background:#002147;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em;transition:background .15s;"
+              onmouseover="this.style.background='#001530'"
+              onmouseout="this.style.background='#002147'">
+        Sign In &nbsp;→
+      </button>
+    </form>
+
+    <p style="font-size:.72rem;color:#9ca3af;text-align:center;margin-top:36px;">
+      University of Professional Studies, Accra &bull; Academic Year {{ ACADEMIC_YEAR }}
+    </p>
+  </div>
+
+</div>
+{% endblock %}
+{% block body_extra %}
+<script>
+function togglePwd(){
+  var f = document.getElementById('pwdInput');
+  var e = document.getElementById('eyeIcon');
+  if(f.type==='password'){
+    f.type='text';
+    e.className='bi bi-eye-slash';
+  } else {
+    f.type='password';
+    e.className='bi bi-eye';
+  }
+}
+</script>
+{% endblock %}

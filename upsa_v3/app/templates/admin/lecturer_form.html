@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Add Lecturer — Admin{% endblock %}
+{% block sidebar %}{% include "admin/_sidebar.html" %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h3 class="fw-bold mb-4" style="color:var(--upsa-navy);">Add New Lecturer</h3>
+    <div class="card" style="border-radius:12px;overflow:hidden;">
+      <div class="card-header py-3 text-white fw-bold" style="background:var(--upsa-navy);">
+        <i class="bi bi-person-badge me-1"></i>Lecturer Information
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Title</label>
+              <select name="title" class="form-select">
+                {% for t in ["Dr.","Prof.","Mr.","Mrs.","Ms."] %}
+                <option value="{{ t }}" {% if l.title==t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-9">
+              <label class="form-label fw-semibold">Full Name *</label>
+              <input type="text" name="full_name" class="form-control" value="{{ l.full_name or '' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Staff ID *</label>
+              <input type="text" name="staff_id" class="form-control" placeholder="UPSA/IT/0042" required value="{{ l.staff_id or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email *</label>
+              <input type="email" name="email" class="form-control" value="{{ l.email or '' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Department</label>
+              <select name="department_id" class="form-select">
+                <option value="">— Select —</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}" {% if l.department_id==d.id %}selected{% endif %}>
+                  {{ d.name }} ({{ d.fac_name }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Password</label>
+              <input type="text" name="password" class="form-control" value="Lecturer@2026">
+            </div>
+            <div class="col-12 mt-2 d-flex gap-2">
+              <button type="submit" class="btn btn-primary fw-bold px-4">Add Lecturer</button>
+              <a href="{{ url_for('admin.lecturers') }}" class="btn btn-light">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

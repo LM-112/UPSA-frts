@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Register Terminal{% endblock %}
+{% block sidebar %}
+<a href="{{ url_for('super_.dashboard') }}" class="nav-item"><i class="bi bi-arrow-left"></i>Back to Dashboard</a>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h3 class="fw-bold mb-4" style="color:var(--upsa-navy);">Register Hikvision Terminal</h3>
+    <div class="card" style="border-radius:12px;overflow:hidden;">
+      <div class="card-header fw-bold py-3 text-white" style="background:var(--upsa-navy);">
+        <i class="bi bi-camera-fill me-1"></i>DS-K1T323MBFWX-E1 MinMoe Terminal
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          <div class="mb-3"><label class="form-label fw-semibold">Terminal Name *</label>
+            <input type="text" name="name" class="form-control" placeholder="HIK-001 – LBC Lab A" required></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Model</label>
+            <input type="text" name="model" class="form-control" value="DS-K1T323MBFWX-E1"></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Serial Number</label>
+            <input type="text" name="serial_no" class="form-control" placeholder="GM6647437"></div>
+          <div class="row">
+            <div class="col-8 mb-3"><label class="form-label fw-semibold">IP Address *</label>
+              <input type="text" name="ip_address" class="form-control" placeholder="192.168.1.45" required></div>
+            <div class="col-4 mb-3"><label class="form-label fw-semibold">Port</label>
+              <input type="number" name="port" class="form-control" value="80"></div>
+          </div>
+          <div class="mb-3"><label class="form-label fw-semibold">Room / Location</label>
+            <input type="text" name="room" class="form-control" placeholder="ITS Lab A"></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Connection Type</label>
+            <select name="connection_type" class="form-select">
+              <option value="wifi">Wi-Fi</option>
+              <option value="ethernet">Ethernet</option>
+              <option value="poe">PoE</option>
+            </select></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Wi-Fi SSID</label>
+            <input type="text" name="wifi_ssid" class="form-control" placeholder="UPSA-Campus-WiFi"></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Admin Password</label>
+            <input type="password" name="password" class="form-control"></div>
+          <div class="d-flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary fw-bold px-4">Register Terminal</button>
+            <a href="{{ url_for('super_.dashboard') }}" class="btn btn-light">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

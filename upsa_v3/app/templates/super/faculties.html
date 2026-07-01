@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Faculties — Super Admin{% endblock %}
+{% block sidebar %}
+<div class="nav-section">System</div>
+<a href="{{ url_for('super_.dashboard') }}" class="nav-item"><i class="bi bi-grid-1x2"></i>Dashboard</a>
+<div class="nav-section">Structure</div>
+<a href="{{ url_for('super_.faculties') }}" class="nav-item active"><i class="bi bi-diagram-3"></i>Faculties</a>
+<a href="{{ url_for('super_.users') }}" class="nav-item"><i class="bi bi-people"></i>All Users</a>
+<div class="nav-section">Hardware</div>
+<a href="{{ url_for('super_.register_device') }}" class="nav-item"><i class="bi bi-plus-circle"></i>Register Terminal</a>
+{% endblock %}
+{% block head_extra %}
+<style>
+.dash-title{font-size:1.4rem;font-weight:800;color:#002147;margin-bottom:2px;}
+.dash-sub{font-size:.82rem;color:#6b7280;}
+.panel{background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;margin-bottom:20px;}
+.panel-head{padding:14px 20px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;}
+.sec-title{font-size:1rem;font-weight:700;color:#002147;}
+.att-table{width:100%;border-collapse:collapse;}
+.att-table th{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:#9ca3af;padding:10px 14px;border-bottom:1px solid #f0f0f0;text-align:left;}
+.att-table td{padding:11px 14px;border-bottom:1px solid #fafafa;font-size:.83rem;color:#374151;}
+.att-table tbody tr:hover{background:#fafafa;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <div class="dash-title">Faculties &amp; Departments</div>
+  <div class="dash-sub">Academic Structure — {{ ACADEMIC_YEAR }}</div>
+</div>
+
+{% for f in faculties %}
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <span class="sec-title">{{ f.name }}</span>
+      <span style="background:#EEF2FF;color:#002147;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;margin-left:8px;">{{ f.code }}</span>
+    </div>
+    <div style="font-size:.8rem;color:#6b7280;">{{ f.dept_count }} Departments</div>
+  </div>
+  <table class="att-table">
+    <thead>
+      <tr><th>Department</th><th>Code</th><th>Programmes</th><th>Students</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for d in departments if d.faculty_id == f.id %}
+      <tr>
+        <td style="font-weight:600;color:#002147;">{{ d.name }}</td>
+        <td><span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600;">{{ d.code }}</span></td>
+        <td>
+          {% for p in programmes if p.department_id == d.id %}
+          <span style="background:#EEF2FF;color:#002147;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;margin-right:4px;">{{ p.name }}</span>
+          {% endfor %}
+        </td>
+        <td style="font-weight:700;">
+          {% set count = namespace(v=0) %}
+          {% for s in students if s.dept_id == d.id %}{% set count.v = count.v + 1 %}{% endfor %}
+          {{ count.v }}
+        </td>
+        <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">Active</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% endblock %}

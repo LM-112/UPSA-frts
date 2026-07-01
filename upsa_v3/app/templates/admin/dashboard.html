@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — UPSA FRT{% endblock %}
+{% block sidebar %}{% include "admin/_sidebar.html" %}{% endblock %}
+{% block head_extra %}
+<style>
+.dash-title { font-size:1.4rem;font-weight:800;color:#002147;margin-bottom:2px; }
+.dash-sub   { font-size:.82rem;color:#6b7280; }
+.filter-btn { padding:6px 16px;border-radius:6px;font-size:.78rem;font-weight:600;border:1.5px solid #e5e7eb;background:#fff;color:#374151;cursor:pointer;transition:all .15s; }
+.filter-btn.active { background:#002147;color:#fff;border-color:#002147; }
+
+/* KPI cards like Effek Supply */
+.kpi-row { display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px; }
+.kpi-box {
+  background:#fff;border-radius:12px;border:1px solid #f0f0f0;
+  padding:20px 22px;
+  box-shadow:0 1px 4px rgba(0,0,0,.05);
+  position:relative;overflow:hidden;
+}
+.kpi-box-icon {
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;margin-bottom:14px;
+}
+.kpi-box-value { font-size:2rem;font-weight:800;line-height:1;color:#002147; }
+.kpi-box-label { font-size:.76rem;color:#6b7280;margin-top:5px;font-weight:500; }
+.kpi-box-arrow {
+  position:absolute;bottom:16px;right:16px;
+  font-size:.75rem;font-weight:600;color:#9ca3af;text-decoration:none;
+}
+.kpi-box-arrow:hover { color:#002147; }
+
+/* Section titles */
+.sec-title { font-size:1rem;font-weight:700;color:#002147;margin-bottom:14px; }
+.see-all { font-size:.78rem;font-weight:600;color:#002147;text-decoration:none; }
+.see-all:hover { text-decoration:underline; }
+
+/* Table */
+.att-table { width:100%;border-collapse:collapse; }
+.att-table th {
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;
+  font-weight:700;color:#9ca3af;padding:10px 14px;
+  border-bottom:1px solid #f0f0f0;text-align:left;
+}
+.att-table td { padding:12px 14px;border-bottom:1px solid #fafafa;font-size:.83rem;color:#374151; }
+.att-table tbody tr:hover { background:#fafafa; }
+
+/* Right sidebar panels */
+.side-card { background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:18px 20px;margin-bottom:16px; }
+.alert-item { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #fafafa; }
+.alert-item:last-child { border-bottom:none; }
+.alert-dot { width:8px;height:8px;border-radius:50%;background:#dc2626;flex-shrink:0;margin-top:5px; }
+</style>
+{% endblock %}
+{% block content %}
+
+<!-- Page header -->
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <div class="dash-title">Departmental Dashboard</div>
+    <div class="dash-sub">Course &amp; Session Management — {{ ACADEMIC_YEAR }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin.student_add') }}" class="btn btn-sm btn-primary">
+      <i class="bi bi-person-plus me-1"></i>Add Student
+    </a>
+    <a href="{{ url_for('admin.lecturer_add') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-person-badge me-1"></i>Add Lecturer
+    </a>
+    <a href="{{ url_for('admin.course_add') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-book me-1"></i>Add Course
+    </a>
+  </div>
+</div>
+
+<!-- KPI row -->
+<div class="kpi-row">
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#EEF2FF;color:#002147;"><i class="bi bi-people-fill"></i></div>
+    <div class="kpi-box-value">{{ stats.total_students }}</div>
+    <div class="kpi-box-label">Total Students</div>
+    <a href="{{ url_for('admin.students') }}" class="kpi-box-arrow">See details →</a>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#F0FDF4;color:#16a34a;"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="kpi-box-value" style="color:#16a34a;">{{ stats.present_today }}</div>
+    <div class="kpi-box-label">Present Today</div>
+    <a href="{{ url_for('admin.attendance') }}" class="kpi-box-arrow">See details →</a>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFFBEB;color:#d97706;"><i class="bi bi-clock-fill"></i></div>
+    <div class="kpi-box-value" style="color:#d97706;">{{ stats.late_today }}</div>
+    <div class="kpi-box-label">Late Today</div>
+    <a href="{{ url_for('admin.attendance') }}" class="kpi-box-arrow">See details →</a>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFF5F5;color:#dc2626;"><i class="bi bi-x-circle-fill"></i></div>
+    <div class="kpi-box-value" style="color:#dc2626;">{{ stats.absent_today }}</div>
+    <div class="kpi-box-label">Absent Today</div>
+    <a href="{{ url_for('admin.alerts') }}" class="kpi-box-arrow">See details →</a>
+  </div>
+</div>
+
+<!-- Second row of KPIs -->
+<div class="kpi-row mb-4" style="grid-template-columns:repeat(3,1fr);">
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#F0F4FF;color:#002147;"><i class="bi bi-journal-bookmark-fill"></i></div>
+    <div class="kpi-box-value">{{ stats.active_courses }}</div>
+    <div class="kpi-box-label">Active Courses</div>
+    <a href="{{ url_for('admin.courses') }}" class="kpi-box-arrow">See details →</a>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#F0FDF4;color:#0891b2;"><i class="bi bi-calendar3-event-fill"></i></div>
+    <div class="kpi-box-value" style="color:#0891b2;">{{ stats.sessions_today }}</div>
+    <div class="kpi-box-label">Sessions Today</div>
+    <a href="{{ url_for('admin.sessions') }}" class="kpi-box-arrow">See details →</a>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFFBEB;color:#C89A2A;"><i class="bi bi-camera-fill"></i></div>
+    <div class="kpi-box-value" style="color:#C89A2A;">{{ stats.frt_enrolled }}</div>
+    <div class="kpi-box-label">FRT Enrolled</div>
+    <a href="{{ url_for('admin.students') }}" class="kpi-box-arrow">See details →</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Today's sessions table -->
+  <div class="col-md-8">
+    <div style="background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;">
+        <span class="sec-title mb-0">Today's Class Sessions</span>
+        <a href="{{ url_for('admin.sessions') }}" class="see-all">See All</a>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="att-table">
+          <thead>
+            <tr>
+              <th>Course</th><th>Group</th><th>Time</th><th>Venue</th>
+              <th>Enrolled</th><th>Present</th><th>Late</th><th>Absent</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in today_sessions %}
+            <tr>
+              <td>
+                <div style="font-weight:700;color:#002147;">{{ s.code }}</div>
+                <div style="font-size:.75rem;color:#9ca3af;">{{ s.title[:25] }}</div>
+              </td>
+              <td>{% if s.group_filter %}<span style="background:#EEF2FF;color:#002147;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;">{{ s.group_filter }}</span>{% else %}<span style="color:#9ca3af;">All</span>{% endif %}</td>
+              <td style="white-space:nowrap;color:#374151;">{{ s.start_time[:5] }}–{{ s.end_time[:5] }}</td>
+              <td style="color:#374151;">{{ s.venue or '—' }} {{ s.room or '' }}</td>
+              <td style="font-weight:700;text-align:center;">{{ s.enrolled or 0 }}</td>
+              <td style="font-weight:700;color:#16a34a;text-align:center;">{{ s.cnt_present or 0 }}</td>
+              <td style="font-weight:700;color:#d97706;text-align:center;">{{ s.cnt_late or 0 }}</td>
+              <td style="font-weight:700;color:#dc2626;text-align:center;">{{ s.cnt_absent or 0 }}</td>
+              <td>
+                {% if s.is_open %}<span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">Active</span>
+                {% else %}<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">Closed</span>{% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:32px;">No sessions scheduled for today</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 7-day chart -->
+    <div style="background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:18px 20px;margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span class="sec-title mb-0">7-Day Attendance Rate</span>
+        <a href="{{ url_for('admin.reports') }}" class="see-all">Full Reports</a>
+      </div>
+      <canvas id="trendChart" height="80"></canvas>
+    </div>
+  </div>
+
+  <!-- Right panel — alerts -->
+  <div class="col-md-4">
+    <div class="side-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span class="sec-title mb-0" style="color:#dc2626;"><i class="bi bi-bell-fill me-1"></i>Absence Alerts</span>
+        <a href="{{ url_for('admin.alerts') }}" class="see-all">See All</a>
+      </div>
+      {% for a in alerts[:6] %}
+      <div class="alert-item">
+        <div class="alert-dot mt-1"></div>
+        <div>
+          <div style="font-weight:700;font-size:.82rem;color:#002147;">{{ a.index_number }} &mdash; {{ a.course_code }}</div>
+          <div style="font-size:.76rem;color:#6b7280;">{{ a.full_name }}</div>
+          <div style="font-size:.73rem;color:#dc2626;margin-top:2px;">{{ a.absent_count }} consecutive absences</div>
+        </div>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:20px 0;color:#9ca3af;font-size:.83rem;">
+        <i class="bi bi-check-circle text-success d-block mb-1" style="font-size:1.4rem;"></i>
+        No absence alerts
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Quick links -->
+    <div class="side-card">
+      <div class="sec-title mb-3">Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="{{ url_for('admin.student_add') }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border-radius:8px;text-decoration:none;color:#002147;font-size:.83rem;font-weight:600;transition:background .15s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8f9fa'">
+          <i class="bi bi-person-plus" style="color:#002147;"></i> Register New Student
+        </a>
+        <a href="{{ url_for('admin.lecturer_add') }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border-radius:8px;text-decoration:none;color:#002147;font-size:.83rem;font-weight:600;transition:background .15s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8f9fa'">
+          <i class="bi bi-person-badge" style="color:#002147;"></i> Add Lecturer
+        </a>
+        <a href="{{ url_for('admin.reports') }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border-radius:8px;text-decoration:none;color:#002147;font-size:.83rem;font-weight:600;transition:background .15s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8f9fa'">
+          <i class="bi bi-file-earmark-bar-graph" style="color:#002147;"></i> Generate Reports
+        </a>
+        <a href="{{ url_for('admin.attendance') }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border-radius:8px;text-decoration:none;color:#002147;font-size:.83rem;font-weight:600;transition:background .15s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8f9fa'">
+          <i class="bi bi-table" style="color:#002147;"></i> View Attendance Records
+        </a>
+        <a href="{{ url_for('admin.devices') }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border-radius:8px;text-decoration:none;color:#002147;font-size:.83rem;font-weight:600;transition:background .15s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8f9fa'">
+          <i class="bi bi-camera" style="color:#002147;"></i> Manage Devices
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block body_extra %}
+<script>
+new Chart(document.getElementById('trendChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ trend|map(attribute='date')|list|tojson }},
+    datasets: [{
+      label: 'Attendance Rate (%)',
+      data: {{ trend|map(attribute='rate')|list|tojson }},
+      backgroundColor: 'rgba(0,33,71,.75)',
+      borderRadius: 5,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Lecturer Dashboard — UPSA FRT{% endblock %}
+{% block sidebar %}
+<div class="nav-section">Overview</div>
+<a href="{{ url_for('lecturer.dashboard') }}" class="nav-item active"><i class="bi bi-grid-1x2"></i>Dashboard</a>
+<div class="nav-section">Reports</div>
+<a href="{{ url_for('lecturer.reports') }}" class="nav-item"><i class="bi bi-file-earmark-bar-graph"></i>Session Reports</a>
+{% endblock %}
+{% block head_extra %}
+<style>
+.dash-title{font-size:1.4rem;font-weight:800;color:#002147;margin-bottom:2px;}
+.dash-sub{font-size:.82rem;color:#6b7280;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kpi-box{background:#fff;border-radius:12px;border:1px solid #f0f0f0;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative;}
+.kpi-box-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:14px;}
+.kpi-box-value{font-size:2rem;font-weight:800;line-height:1;color:#002147;}
+.kpi-box-label{font-size:.76rem;color:#6b7280;margin-top:5px;font-weight:500;}
+.sec-title{font-size:1rem;font-weight:700;color:#002147;margin-bottom:14px;}
+.see-all{font-size:.78rem;font-weight:600;color:#002147;text-decoration:none;}
+.panel{background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;margin-bottom:16px;}
+.panel-head{padding:14px 20px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;}
+.att-table{width:100%;border-collapse:collapse;}
+.att-table th{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:#9ca3af;padding:10px 14px;border-bottom:1px solid #f0f0f0;text-align:left;}
+.att-table td{padding:11px 14px;border-bottom:1px solid #fafafa;font-size:.83rem;color:#374151;}
+.att-table tbody tr:hover{background:#fafafa;}
+.course-card{background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:18px 20px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <div class="dash-title">{% if lec %}{{ lec.title }} {{ lec.full_name }}{% else %}Lecturer Dashboard{% endif %}</div>
+    <div class="dash-sub">{% if lec %}{{ lec.dept_name }} — {% endif %}Academic Year {{ ACADEMIC_YEAR }}</div>
+  </div>
+  <a href="{{ url_for('lecturer.reports') }}" class="btn btn-sm btn-primary">
+    <i class="bi bi-file-earmark-bar-graph me-1"></i>All Reports
+  </a>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-row">
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#EEF2FF;color:#002147;"><i class="bi bi-journal-bookmark-fill"></i></div>
+    <div class="kpi-box-value">{{ my_courses|length }}</div>
+    <div class="kpi-box-label">My Courses</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFFBEB;color:#d97706;"><i class="bi bi-calendar3-event-fill"></i></div>
+    <div class="kpi-box-value" style="color:#d97706;">{{ today_sessions|length }}</div>
+    <div class="kpi-box-label">Sessions Today</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#F0FDF4;color:#16a34a;"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="kpi-box-value" style="color:#16a34a;">{{ today_sessions|sum(attribute='cnt_present') }}</div>
+    <div class="kpi-box-label">Present Today</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFF5F5;color:#dc2626;"><i class="bi bi-x-circle-fill"></i></div>
+    <div class="kpi-box-value" style="color:#dc2626;">{{ today_sessions|sum(attribute='cnt_absent') }}</div>
+    <div class="kpi-box-label">Absent Today</div>
+  </div>
+</div>
+
+<!-- Today's sessions -->
+<div class="panel mb-4">
+  <div class="panel-head">
+    <span class="sec-title mb-0">Today's Class Sessions</span>
+  </div>
+  <table class="att-table">
+    <thead>
+      <tr><th>Course</th><th>Group</th><th>Type</th><th>Time</th><th>Venue</th><th>Enrolled</th><th>Present</th><th>Late</th><th>Absent</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for s in today_sessions %}
+      {% set total = s.enrolled or 0 %}
+      {% set present = s.cnt_present or 0 %}
+      {% set late = s.cnt_late or 0 %}
+      {% set absent = s.cnt_absent or 0 %}
+      {% set rate = ((present+late)/[total,1]|max*100)|round(0)|int %}
+      <tr>
+        <td>
+          <div style="font-weight:700;color:#002147;">{{ s.code }}</div>
+          <div style="font-size:.75rem;color:#9ca3af;">{{ s.title[:28] }}</div>
+        </td>
+        <td>{% if s.group_filter %}<span style="background:#EEF2FF;color:#002147;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;">{{ s.group_filter }}</span>{% else %}<span style="color:#9ca3af;">All</span>{% endif %}</td>
+        <td><span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:600;">{{ s.session_type or 'regular' }}</span></td>
+        <td style="white-space:nowrap;font-size:.82rem;">{{ s.start_time[:5] }}–{{ s.end_time[:5] }}</td>
+        <td style="font-size:.82rem;">{{ s.venue or '—' }} {{ s.room or '' }}</td>
+        <td style="text-align:center;font-weight:700;">{{ total }}</td>
+        <td style="text-align:center;font-weight:700;color:#16a34a;">{{ present }}</td>
+        <td style="text-align:center;font-weight:700;color:#d97706;">{{ late }}</td>
+        <td style="text-align:center;font-weight:700;color:#dc2626;">{{ absent }}</td>
+        <td>
+          {% if s.is_open %}<span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">Open</span>
+          {% else %}<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">Closed</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="{{ url_for('lecturer.live', sid=s.id) }}" class="btn btn-sm btn-primary" style="padding:4px 10px;font-size:.75rem;">
+              <i class="bi bi-broadcast me-1"></i>Live
+            </a>
+            <a href="{{ url_for('lecturer.export_session', sid=s.id) }}" class="btn btn-sm btn-success" style="padding:4px 10px;font-size:.75rem;">
+              <i class="bi bi-file-excel me-1"></i>Export
+            </a>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:32px;">No sessions scheduled for today</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- My Courses -->
+<div class="sec-title">My Courses — {{ ACADEMIC_YEAR }}</div>
+<div class="row g-3">
+  {% for c in my_courses %}
+  <div class="col-md-6">
+    <div class="course-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span style="background:#002147;color:#fff;padding:3px 10px;border-radius:6px;font-size:.75rem;font-weight:700;">{{ c.code }}</span>
+          <div style="font-weight:700;color:#002147;margin-top:8px;margin-bottom:4px;">{{ c.title }}</div>
+          <div style="font-size:.78rem;color:#6b7280;">{{ c.credit_hours }} credits &bull; Sem {{ c.semester }} &bull; {{ c.student_count }} students &bull; {{ c.session_count }} sessions</div>
+        </div>
+        <a href="{{ url_for('lecturer.export_course', cid=c.id) }}" class="btn btn-sm btn-success ms-2" style="flex-shrink:0;">
+          <i class="bi bi-file-excel me-1"></i>Export
+        </a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12" style="text-align:center;color:#9ca3af;padding:32px;">No courses assigned</div>
+  {% endfor %}
+</div>
+{% endblock %}

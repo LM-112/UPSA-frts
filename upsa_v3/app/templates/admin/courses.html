@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Courses — Admin{% endblock %}
+{% block sidebar %}{% include "admin/_sidebar.html" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0" style="color:var(--upsa-navy);">Courses</h3>
+  <a href="{{ url_for('admin.course_add') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i>Add Course
+  </a>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>Code</th><th>Title</th><th>Department</th><th>Credits</th><th>Semester</th>
+        <th>Lecturer</th><th class="text-center">Students</th><th class="text-center">Sessions</th><th>Export</th></tr></thead>
+      <tbody>
+        {% for c in courses %}
+        <tr>
+          <td><strong>{{ c.code }}</strong></td>
+          <td>{{ c.title }}</td>
+          <td style="font-size:.8rem;">{{ c.dept_name or "—" }}</td>
+          <td class="text-center">{{ c.credit_hours }}</td>
+          <td>Sem {{ c.semester }}</td>
+          <td style="font-size:.83rem;">{{ c.lec_title or "" }} {{ c.lecturer_name or "—" }}</td>
+          <td class="text-center fw-bold">{{ c.student_count }}</td>
+          <td class="text-center">{{ c.session_count }}</td>
+          <td><a href="{{ url_for('admin.export_report', cid=c.id) }}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-file-excel me-1"></i>Export</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center text-muted py-4">No courses found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Add Course — Admin{% endblock %}
+{% block sidebar %}{% include "admin/_sidebar.html" %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h3 class="fw-bold mb-4" style="color:var(--upsa-navy);">Add New Course</h3>
+    <div class="card" style="border-radius:12px;overflow:hidden;">
+      <div class="card-header py-3 text-white fw-bold" style="background:var(--upsa-navy);">
+        <i class="bi bi-book me-1"></i>Course Information
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Course Code *</label>
+              <input type="text" name="code" class="form-control" placeholder="ITM 412" required value="{{ c.code or '' }}">
+            </div>
+            <div class="col-md-8">
+              <label class="form-label fw-semibold">Course Title *</label>
+              <input type="text" name="title" class="form-control" value="{{ c.title or '' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Credit Hours</label>
+              <input type="number" name="credit_hours" class="form-control" value="{{ c.credit_hours or 3 }}" min="1" max="6">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Semester</label>
+              <select name="semester" class="form-select">
+                <option value="1" {% if c.semester==1 %}selected{% endif %}>Semester 1</option>
+                <option value="2" {% if c.semester!=1 %}selected{% endif %}>Semester 2</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Academic Year</label>
+              <input type="text" name="academic_year" class="form-control" value="2025/2026">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Department</label>
+              <select name="department_id" class="form-select">
+                <option value="">— Select —</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}">{{ d.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Lecturer</label>
+              <select name="lecturer_id" class="form-select">
+                <option value="">— Assign Lecturer —</option>
+                {% for l in lecturers %}
+                <option value="{{ l.id }}">{{ l.title }} {{ l.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 mt-2 d-flex gap-2">
+              <button type="submit" class="btn btn-primary fw-bold px-4">Add Course</button>
+              <a href="{{ url_for('admin.courses') }}" class="btn btn-light">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

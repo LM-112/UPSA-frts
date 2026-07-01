@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Session Reports — Lecturer{% endblock %}
+{% block sidebar %}
+<div class="nav-section">Overview</div>
+<a href="{{ url_for('lecturer.dashboard') }}" class="nav-item"><i class="bi bi-speedometer2"></i>Dashboard</a>
+<div class="nav-section">Reports</div>
+<a href="{{ url_for('lecturer.reports') }}" class="nav-item active"><i class="bi bi-file-earmark-bar-graph"></i>Session Reports</a>
+{% endblock %}
+{% block head_extra %}
+<style>
+.stat-pill{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-weight:700;font-size:.78rem;}
+.pill-present{background:#d1fae5;color:#065f46;}
+.pill-late   {background:#fef3c7;color:#92400e;}
+.pill-absent {background:#fee2e2;color:#991b1b;}
+.pill-total  {background:#dbeafe;color:#1e40af;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-0" style="color:var(--upsa-navy);">Session Reports</h3>
+    <p class="text-muted mb-0" style="font-size:.85rem;">
+      {{ lec.title }} {{ lec.full_name }} &bull; {{ lec.dept_name or '—' }}
+    </p>
+  </div>
+</div>
+
+<!-- Summary totals across all sessions -->
+{% set total_p = sessions|sum(attribute='cnt_present') %}
+{% set total_l = sessions|sum(attribute='cnt_late') %}
+{% set total_a = sessions|sum(attribute='cnt_absent') %}
+{% set total_e = sessions|sum(attribute='enrolled') %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card kpi-card kpi-blue shadow-sm">
+    <div class="kpi-num" style="color:var(--upsa-navy);">{{ sessions|length }}</div>
+    <div class="kpi-label">Total Sessions</div>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="card kpi-card kpi-green shadow-sm">
+    <div class="kpi-num text-success">{{ total_p }}</div>
+    <div class="kpi-label">Total Present</div>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="card kpi-card kpi-amber shadow-sm">
+    <div class="kpi-num text-warning">{{ total_l }}</div>
+    <div class="kpi-label">Total Late</div>
+  </div></div>
+  <div class="col-6 col-md-3"><div class="card kpi-card kpi-red shadow-sm">
+    <div class="kpi-num text-danger">{{ total_a }}</div>
+    <div class="kpi-label">Total Absent</div>
+  </div></div>
+</div>
+
+<!-- Session-by-session breakdown -->
+<div class="card">
+  <div class="card-header bg-white border-bottom fw-semibold" style="color:var(--upsa-navy);">
+    <i class="bi bi-table me-1"></i>All Sessions — Attendance Breakdown
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Course Code</th>
+          <th>Course Name</th>
+          <th>Semester</th>
+          <th>Session Type</th>
+          <th>Group / Class</th>
+          <th>Level</th>
+          <th>Time</th>
+          <th>Venue / Room</th>
+          <th class="text-center">Class List</th>
+          <th class="text-center text-success">Present</th>
+          <th class="text-center text-warning">Late</th>
+          <th class="text-center text-danger">Absent</th>
+          <th class="text-center">Rate</th>
+          <th>Export</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sessions %}
+        {% set total   = s.enrolled or 0 %}
+        {% set present = s.cnt_present or 0 %}
+        {% set late    = s.cnt_late or 0 %}
+        {% set absent  = s.cnt_absent or 0 %}
+        {% set att     = present + late %}
+        {% set rate    = ((att / [total,1]|max) * 100)|round(1) %}
+        {% set col     = 'success' if rate>=75 else ('warning' if rate>=50 else 'danger') %}
+        <tr>
+          <td class="fw-semibold" style="white-space:nowrap;font-size:.84rem;">{{ s.session_date }}</td>
+          <td><strong>{{ s.code }}</strong></td>
+          <td style="font-size:.83rem;">{{ s.title }}</td>
+          <td class="text-center" style="font-size:.82rem;">Sem {{ s.semester }}</td>
+          <td>
+            <span class="badge bg-light text-dark border" style="font-size:.72rem;">
+              {{ s.session_type or 'regular' }}
+            </div>
+          </td>
+          <td>
+            {% if s.group_filter %}
+            <span class="badge bg-secondary">{{ s.group_filter }}</div>
+            {% else %}
+            <span class="text-muted" style="font-size:.8rem;">All</div>
+            {% endif %}
+          </td>
+          <td style="font-size:.82rem;">
+            {% if s.group_filter %}
+              {% if 'IT' in (s.group_filter or '') %}Level 400
+              {% elif 'MKT' in (s.group_filter or '') %}Level 300
+              {% elif 'ACC' in (s.group_filter or '') %}Level 300
+              {% else %}—{% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td style="white-space:nowrap;font-size:.82rem;">
+            {{ s.start_time[:5] }} – {{ s.end_time[:5] }}
+          </td>
+          <td style="font-size:.82rem;">
+            {{ s.venue or '—' }} {{ s.room or '' }}
+          </td>
+          <td class="text-center fw-bold">{{ total }}</td>
+          <td class="text-center">
+            <span class="stat-pill pill-present">{{ present }}</div>
+          </td>
+          <td class="text-center">
+            <span class="stat-pill pill-late">{{ late }}</div>
+          </td>
+          <td class="text-center">
+            <span class="stat-pill pill-absent">{{ absent }}</div>
+          </td>
+          <td class="text-center">
+            <span class="badge bg-{{ col }}">{{ rate }}%</div>
+          </td>
+          <td>
+            <a href="{{ url_for('lecturer.export_session', sid=s.id) }}"
+               class="btn btn-sm btn-success" title="Export attendance to Excel">
+              <i class="bi bi-file-excel me-1"></i>Export
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="15" class="text-center text-muted py-4">No sessions recorded yet</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Per-course export section -->
+<div class="section-header mt-4">
+  <i class="bi bi-file-earmark-excel me-1"></i>Export Full Course Attendance (All Sessions)
+</div>
+<div class="row g-2">
+  {% for c in my_courses %}
+  <div class="col-md-4">
+    <div class="card" style="border-radius:8px;">
+      <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+        <div>
+          <span class="badge bg-primary me-1">{{ c.code }}</div>
+          <span style="font-size:.82rem;">{{ c.title[:30] }}</div>
+          <div class="text-muted" style="font-size:.75rem;">{{ c.student_count }} students · {{ c.session_count }} sessions</div>
+        </div>
+        <a href="{{ url_for('lecturer.export_course', cid=c.id) }}"
+           class="btn btn-sm btn-outline-success ms-2">
+          <i class="bi bi-file-excel me-1"></i>Export
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

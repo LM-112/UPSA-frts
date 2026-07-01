@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Live Attendance — {{ session.code }}{% endblock %}
+{% block sidebar %}
+<a href="{{ url_for('lecturer.dashboard') }}" class="nav-item"><i class="bi bi-arrow-left"></i>Back</a>
+<a href="{{ url_for('lecturer.live', sid=session.id) }}" class="nav-item active"><i class="bi bi-broadcast"></i>Live Attendance</a>
+<a href="{{ url_for('lecturer.reports') }}" class="nav-item"><i class="bi bi-file-earmark-bar-graph"></i>My Reports</a>
+{% endblock %}
+{% block head_extra %}
+<style>
+.sim-bar{display:inline-flex;align-items:center;gap:5px;}
+.sim-track{width:48px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;}
+.sim-fill{height:100%;border-radius:3px;}
+.att-counter{font-size:1.5rem;font-weight:800;line-height:1;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <div>
+    <h4 class="fw-bold mb-0" style="color:var(--upsa-navy);">
+      Live Attendance — {{ session.code }}: {{ session.title }}
+    </h4>
+    <p class="text-muted mb-0" style="font-size:.82rem;">
+      {{ session.venue or "" }} {{ session.room or "" }} &bull;
+      {{ session.start_time[:5] }}–{{ session.end_time[:5] }} &bull;
+      Group: <strong>{{ session.group_filter or "All" }}</strong> &bull;
+      Date: {{ session.session_date }}
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <form method="POST" action="{{ url_for('lecturer.toggle', sid=session.id) }}">
+      <button class="btn btn-sm {% if session.is_open %}btn-warning{% else %}btn-success{% endif %} fw-bold">
+        {% if session.is_open %}<i class="bi bi-stop-circle me-1"></i>Close Session
+        {% else %}<i class="bi bi-play-circle me-1"></i>Open Session{% endif %}
+      </button>
+    </form>
+    <a href="{{ url_for('lecturer.export_session', sid=session.id) }}" class="btn btn-sm btn-success">
+      <i class="bi bi-file-excel me-1"></i>Export Excel
+    </a>
+  </div>
+</div>
+
+<!-- Live banner -->
+<div class="live-banner mb-3">
+  Session <span {% if session.is_open %}class="text-success"{% else %}class="text-danger"{% endif %}>
+    {{ "IN PROGRESS" if session.is_open else "CLOSED" }}
+  </div>
+  &nbsp;|&nbsp; Present: <strong id="cnt-p">—</strong>
+  &nbsp;|&nbsp; Late: <strong id="cnt-l">—</strong>
+  &nbsp;|&nbsp; Absent: <strong id="cnt-a">—</strong>
+  &nbsp;/&nbsp; <span id="cnt-t">—</span> enrolled
+  &nbsp;|&nbsp; Rate: <strong id="cnt-rate">—</strong>
+  &nbsp;|&nbsp; <span class="text-muted" style="font-size:.8rem;">Polling every 3s</div>
+</div>
+
+<div class="row g-3">
+  <!-- Main attendance table -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <span class="fw-semibold" style="color:var(--upsa-navy);">
+          <i class="bi bi-people me-1"></i>Student Attendance List (Live)
+        </div>
+        <div class="d-flex gap-2" style="font-size:.78rem;">
+          <span class="badge badge-present" id="stat-p">P: —</div>
+          <span class="badge badge-late" id="stat-l">L: —</div>
+          <span class="badge badge-absent" id="stat-a">A: —</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table" style="font-size:.83rem;">
+          <thead><tr>
+            <th>Index No.</th>
+            <th>Student Name</th>
+            <th>Programme</th>
+            <th>Group</th>
+            <th>Level</th>
+            <th>Status</th>
+            <th>Time In</th>
+            <th>Mins Late</th>
+            <th>Similarity</th>
+            <th>Source</th>
+          </tr></thead>
+          <tbody id="attendanceBody">
+            <tr><td colspan="10" class="text-center text-muted py-4">
+              <div class="spinner-border spinner-border-sm me-2"></div>Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="col-md-4">
+    <!-- Live camera feed panel -->
+    <div class="cam-panel mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-warning fw-bold" style="font-size:.8rem;">
+          <i class="bi bi-circle-fill text-danger me-1" style="font-size:.5rem;" id="blink"></i>
+          LIVE FEED
+        </div>
+        <span class="text-white-50" style="font-size:.75rem;">DS-K1T323MBFWX-E1</div>
+      </div>
+      <div class="cam-feed">
+        <div class="text-center">
+          <i class="bi bi-camera-video-fill text-warning" style="font-size:2.2rem;"></i>
+          <div class="text-warning mt-1" style="font-size:.72rem;font-weight:600;">[LIVE CAMERA FEED]</div>
+        </div>
+      </div>
+      <div class="text-white-50" style="font-size:.75rem;">Room: {{ session.venue or "" }} {{ session.room or "" }}</div>
+      <div class="text-success mt-1" style="font-size:.78rem;" id="lastEvent">Waiting for recognition events…</div>
+    </div>
+
+    <!-- Stats mini cards -->
+    <div class="row g-2 mb-3">
+      <div class="col-4">
+        <div class="card text-center p-2 border-0 shadow-sm" style="border-left:3px solid #16a34a!important;">
+          <div class="att-counter text-success" id="mini-p">—</div>
+          <div style="font-size:.68rem;color:#6b7280;">Present</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="card text-center p-2 border-0 shadow-sm" style="border-left:3px solid #f59e0b!important;">
+          <div class="att-counter text-warning" id="mini-l">—</div>
+          <div style="font-size:.68rem;color:#6b7280;">Late</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="card text-center p-2 border-0 shadow-sm" style="border-left:3px solid #ef4444!important;">
+          <div class="att-counter text-danger" id="mini-a">—</div>
+          <div style="font-size:.68rem;color:#6b7280;">Absent</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual override -->
+    <div class="card border-0 shadow-sm mb-2" style="border-radius:10px;">
+      <div class="card-header bg-white border-bottom fw-semibold" style="font-size:.85rem;">
+        <i class="bi bi-pencil-square me-1"></i>Manual Override
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('lecturer.override', sid=session.id) }}">
+          <div class="mb-2">
+            <select name="student_id" class="form-select form-select-sm" required>
+              <option value="">Select student…</option>
+              {% for s in students %}
+              <option value="{{ s.id }}">{{ s.index_number }} — {{ s.full_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <select name="status" class="form-select form-select-sm">
+              <option value="present">Present</option>
+              <option value="late">Late</option>
+              <option value="absent">Absent</option>
+              <option value="excused">Excused</option>
+            </select>
+          </div>
+          <input type="text" name="note" class="form-control form-control-sm mb-2" placeholder="Note (optional)">
+          <button class="btn btn-sm btn-primary w-100">Apply Override</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Simulate button -->
+    <button class="btn btn-outline-info btn-sm w-100" onclick="simulateEvent()">
+      <i class="bi bi-lightning-charge me-1"></i>Simulate Face Recognition (Demo)
+    </button>
+  </div>
+</div>
+{% endblock %}
+{% block body_extra %}
+<script>
+const SID = {{ session.id }};
+let blinkOn = true;
+
+function blink(){
+  const el = document.getElementById('blink');
+  if(el) el.style.color = blinkOn ? '#ef4444' : 'transparent';
+  blinkOn = !blinkOn;
+}
+setInterval(blink, 800);
+
+async function refresh(){
+  try{
+    const r = await fetch(`/lecturer/session/${SID}/data`);
+    const data = await r.json();
+    const s = data.summary;
+    ['cnt-p','mini-p',].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.present; });
+    ['cnt-l','mini-l',].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.late; });
+    ['cnt-a','mini-a',].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.absent; });
+    document.getElementById('cnt-t').textContent = s.total;
+    document.getElementById('cnt-rate').textContent = s.att_pct + '%';
+    document.getElementById('stat-p').textContent = 'P: ' + s.present;
+    document.getElementById('stat-l').textContent = 'L: ' + s.late;
+    document.getElementById('stat-a').textContent = 'A: ' + s.absent;
+
+    const tbody = document.getElementById('attendanceBody');
+    if(!data.rows.length){
+      tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4">No students enrolled</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.rows.map(r => {
+      const badge = r.status==='present'?'<span class="badge badge-present">Present</span>'
+                  : r.status==='late'   ?'<span class="badge badge-late">Late</span>'
+                  : r.status==='excused'?'<span class="badge badge-excused">Excused</span>'
+                  :                       '<span class="badge badge-absent">Absent</span>';
+      const sim = r.score
+        ? `<div class="sim-bar"><div class="sim-track"><div class="sim-fill" style="width:${r.score*100}%;background:${r.score>0.9?'#16a34a':'#f59e0b'}"></div></div><small>${(r.score*100).toFixed(0)}%</small></div>`
+        : '—';
+      const minsLate = r.mins_late > 0
+        ? `<span class="text-warning fw-bold">${r.mins_late} min</span>`
+        : (r.status==='present'?'<span class="text-success">On time</span>':'—');
+      return `<tr>
+        <td><code style="font-size:.8rem;">${r.index}</code></td>
+        <td class="fw-semibold">${r.name}</td>
+        <td style="font-size:.78rem;">${r.programme}</td>
+        <td>${r.group!=='—'?`<span class="badge bg-secondary">${r.group}</span>`:'—'}</td>
+        <td>${r.level!=='—'?`<span class="badge bg-light text-dark border">Lvl ${r.level}</span>`:'—'}</td>
+        <td>${badge}</td>
+        <td class="text-muted">${r.check_in||'—'}</td>
+        <td>${minsLate}</td>
+        <td>${sim}</td>
+        <td><span class="badge bg-light text-dark border" style="font-size:.7rem;">${r.source}</span></td>
+      </tr>`;
+    }).join('');
+
+    const lastIn = data.rows.filter(r=>r.check_in).pop();
+    if(lastIn) document.getElementById('lastEvent').textContent = `Last event: ${lastIn.name} at ${lastIn.check_in}`;
+  }catch(e){}
+}
+
+async function simulateEvent(){
+  try{
+    const r = await fetch('/api/v1/events/simulate',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({employee_id:'10300137', similarity:0.94})
+    });
+    const d = await r.json();
+    const msg = d.ok ? `Simulated: ${d.status||d.reason} for ${d.student||d.student}` : `Failed: ${d.reason}`;
+    document.getElementById('lastEvent').textContent = msg + ' at ' + new Date().toLocaleTimeString();
+    setTimeout(refresh, 500);
+  }catch(e){}
+}
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+{% endblock %}

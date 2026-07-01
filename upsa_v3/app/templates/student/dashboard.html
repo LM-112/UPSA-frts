@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}My Attendance — UPSA FRT{% endblock %}
+{% block sidebar %}
+<div class="nav-section">My Account</div>
+<a href="{{ url_for('student.dashboard') }}" class="nav-item active"><i class="bi bi-grid-1x2"></i>Dashboard</a>
+<div class="nav-section">Courses</div>
+{% for cd in courses[:6] %}
+<a href="{{ url_for('student.course_detail', cid=cd.course_id) }}" class="nav-item" style="font-size:.79rem;padding-left:22px;">
+  <i class="bi bi-journal-bookmark"></i>{{ cd.code }}
+</a>
+{% endfor %}
+<div class="nav-section">Consent</div>
+<a href="{{ url_for('student.dashboard') }}#consent" class="nav-item"><i class="bi bi-shield-check"></i>Biometric Consent</a>
+{% endblock %}
+{% block head_extra %}
+<style>
+.dash-title{font-size:1.4rem;font-weight:800;color:#002147;margin-bottom:2px;}
+.dash-sub{font-size:.82rem;color:#6b7280;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kpi-box{background:#fff;border-radius:12px;border:1px solid #f0f0f0;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative;}
+.kpi-box-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:14px;}
+.kpi-box-value{font-size:2rem;font-weight:800;line-height:1;color:#002147;}
+.kpi-box-label{font-size:.76rem;color:#6b7280;margin-top:5px;font-weight:500;}
+.sec-title{font-size:1rem;font-weight:700;color:#002147;margin-bottom:14px;}
+.profile-card{background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:22px 24px;margin-bottom:24px;}
+.course-card{background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:18px 20px;border-top:3px solid;}
+.consent-card{background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);padding:20px 24px;}
+</style>
+{% endblock %}
+{% block content %}
+{% if me %}
+
+<!-- Profile card -->
+<div class="profile-card">
+  <div class="d-flex align-items-center gap-4">
+    <div style="width:56px;height:56px;border-radius:50%;background:#002147;color:#E8B84B;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      {{ me.full_name[:2]|upper }}
+    </div>
+    <div class="flex-grow-1">
+      <div style="font-size:1.2rem;font-weight:800;color:#002147;">{{ me.full_name }}</div>
+      <div style="font-size:.82rem;color:#6b7280;margin-top:2px;">
+        Index No: <strong style="color:#002147;">{{ me.index_number }}</strong> &bull;
+        Level {{ me.level or '—' }} &bull;
+        Group: <strong style="color:#002147;">{{ me.group_name or '—' }}</strong> &bull;
+        {{ me.faculty_code or '' }} — {{ me.prog_name or '—' }} &bull;
+        Hall: {{ me.hall or '—' }}
+      </div>
+      <div style="margin-top:6px;">
+        {% if me.consent_given %}
+        <span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;"><i class="bi bi-shield-check me-1"></i>Biometric Consent: Active</span>
+        {% else %}
+        <span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;"><i class="bi bi-shield-x me-1"></i>Consent: Not Given</span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="text-align:center;min-width:80px;">
+      <div style="font-size:2.2rem;font-weight:800;color:{% if summary.rate >= 75 %}#16a34a{% elif summary.rate >= 60 %}#d97706{% else %}#dc2626{% endif %};">{{ summary.rate }}%</div>
+      <div style="font-size:.73rem;color:#6b7280;">Overall Attendance</div>
+    </div>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-row">
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#F0FDF4;color:#16a34a;"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="kpi-box-value" style="color:#16a34a;">{{ summary.present }}</div>
+    <div class="kpi-box-label">Total Present</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFFBEB;color:#d97706;"><i class="bi bi-clock-fill"></i></div>
+    <div class="kpi-box-value" style="color:#d97706;">{{ summary.late }}</div>
+    <div class="kpi-box-label">Total Late</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFF5F5;color:#dc2626;"><i class="bi bi-x-circle-fill"></i></div>
+    <div class="kpi-box-value" style="color:#dc2626;">{{ summary.absent }}</div>
+    <div class="kpi-box-label">Total Absent</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#EEF2FF;color:#002147;"><i class="bi bi-journal-bookmark-fill"></i></div>
+    <div class="kpi-box-value">{{ courses|length }}</div>
+    <div class="kpi-box-label">Courses Registered</div>
+  </div>
+</div>
+
+<!-- Course attendance cards -->
+<div class="sec-title">My Course Attendance</div>
+<div class="row g-3 mb-4">
+  {% for cd in courses %}
+  {% set color = '#16a34a' if cd.rate >= 75 else ('#d97706' if cd.rate >= 60 else '#dc2626') %}
+  <div class="col-md-6">
+    <a href="{{ url_for('student.course_detail', cid=cd.course_id) }}" style="text-decoration:none;">
+      <div class="course-card" style="border-top-color:{{ color }};">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span style="background:#002147;color:#fff;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:700;">{{ cd.code }}</span>
+            <div style="font-weight:700;color:#002147;margin-top:6px;margin-bottom:2px;">{{ cd.title }}</div>
+            <div style="font-size:.76rem;color:#6b7280;">{{ cd.lec_title or '' }} {{ cd.lecturer_name or '—' }}</div>
+          </div>
+          <div style="font-size:1.4rem;font-weight:800;color:{{ color }};flex-shrink:0;">{{ cd.rate }}%</div>
+        </div>
+        <div style="font-size:.76rem;color:#6b7280;margin-bottom:8px;">
+          Attended: {{ (cd.present or 0) + (cd.late or 0) }}/{{ cd.total_sessions or 0 }} sessions
+        </div>
+        <div style="background:#f3f4f6;border-radius:20px;height:8px;overflow:hidden;">
+          <div style="width:{{ cd.rate }}%;height:100%;background:{{ color }};border-radius:20px;transition:width .3s;"></div>
+        </div>
+        {% if cd.rate < 75 %}
+        <div style="font-size:.72rem;color:#dc2626;margin-top:6px;"><i class="bi bi-exclamation-triangle me-1"></i>Below minimum attendance threshold</div>
+        {% endif %}
+      </div>
+    </a>
+  </div>
+  {% else %}
+  <div class="col-12" style="text-align:center;color:#9ca3af;padding:32px;">No courses registered</div>
+  {% endfor %}
+</div>
+
+<!-- Consent card -->
+<div class="consent-card" id="consent">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div>
+      <div style="font-weight:700;font-size:.95rem;color:{% if me.consent_given %}#166534{% else %}#991b1b{% endif %};margin-bottom:6px;">
+        <i class="bi bi-shield-{% if me.consent_given %}check{% else %}x{% endif %} me-1"></i>
+        Biometric Consent Status
+      </div>
+      {% if me.consent_given %}
+      <div style="font-size:.82rem;color:#6b7280;">Consent given: {{ me.consent_date[:10] if me.consent_date else '—' }} &bull; Template enrolled on: HIK-001</div>
+      <div style="font-size:.82rem;color:#6b7280;margin-top:2px;">Retention: 5 academic years &bull; Right to withdraw: available at any time</div>
+      {% else %}
+      <div style="font-size:.82rem;color:#6b7280;">Face recognition attendance is not active for your account.</div>
+      {% endif %}
+    </div>
+    {% if me.consent_given %}
+    <form method="POST" action="{{ url_for('student.withdraw_consent') }}">
+      <button class="btn btn-sm btn-danger ms-3">Withdraw Consent</button>
+    </form>
+    {% else %}
+    <form method="POST" action="{{ url_for('student.give_consent') }}">
+      <button class="btn btn-sm btn-success ms-3"><i class="bi bi-shield-check me-1"></i>Give Consent</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+<div style="text-align:center;padding:48px;color:#9ca3af;">Student profile not linked. Contact your administrator.</div>
+{% endif %}
+{% endblock %}

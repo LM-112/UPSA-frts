@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Users — Super Admin{% endblock %}
+{% block sidebar %}
+<a href="{{ url_for('super_.dashboard') }}" class="nav-item"><i class="bi bi-arrow-left"></i>Back to Dashboard</a>
+<a href="{{ url_for('super_.users') }}" class="nav-item active"><i class="bi bi-people"></i>All Users</a>
+{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4" style="color:var(--upsa-navy);">System Users</h3>
+<div class="card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>Full Name</th><th>Email</th><th>Role</th><th>Active</th><th>Last Login</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="fw-semibold">{{ u.full_name }}</td>
+          <td style="font-size:.85rem;">{{ u.email }}</td>
+          <td><span class="badge bg-primary">{{ u.role }}</span></td>
+          <td>{% if u.is_active %}<span class="badge badge-present">Yes</span>{% else %}<span class="badge badge-absent">No</span>{% endif %}</td>
+          <td class="text-muted" style="font-size:.82rem;">{{ u.last_login_at[:16] if u.last_login_at else 'Never' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

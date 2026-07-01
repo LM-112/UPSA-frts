@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ "Add" if action=="add" else "Edit" }} Student — Admin{% endblock %}
+{% block sidebar %}{% include "admin/_sidebar.html" %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <h3 class="fw-bold mb-4" style="color:var(--upsa-navy);">
+      {{ "Register New Student" if action=="add" else "Edit Student Details" }}
+    </h3>
+    <div class="card" style="border-radius:12px;overflow:hidden;">
+      <div class="card-header py-3 text-white fw-bold" style="background:var(--upsa-navy);">
+        <i class="bi bi-person-plus me-1"></i>Student Information
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label fw-semibold">Full Name *</label>
+              <input type="text" name="full_name" class="form-control" value="{{ s.full_name or '' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Gender</label>
+              <select name="gender" class="form-select">
+                <option value="">—</option>
+                <option value="male"   {% if s.gender=="male" %}selected{% endif %}>Male</option>
+                <option value="female" {% if s.gender=="female" %}selected{% endif %}>Female</option>
+              </select>
+            </div>
+            {% if action=="add" %}
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Index Number *</label>
+              <input type="text" name="index_number" class="form-control" placeholder="e.g. 10300137" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email Address *</label>
+              <input type="email" name="email" class="form-control" placeholder="10300137@students.upsa.edu.gh" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Password</label>
+              <input type="text" name="password" class="form-control" value="Student@2026">
+              <small class="text-muted">Default: Student@2026</small>
+            </div>
+            {% endif %}
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Programme</label>
+              <select name="programme_id" class="form-select">
+                <option value="">— Select Programme —</option>
+                {% for p in programmes %}
+                <option value="{{ p.id }}" {% if s.programme_id==p.id %}selected{% endif %}>
+                  {{ p.code }} — {{ p.name }} ({{ p.dept_name }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Level</label>
+              <select name="level" class="form-select">
+                <option value="">—</option>
+                {% for l in [100,200,300,400] %}
+                <option value="{{ l }}" {% if s.level==l %}selected{% endif %}>Level {{ l }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Group</label>
+              <input type="text" name="group_name" class="form-control"
+                     placeholder="e.g. IT1, MK10, PR2" value="{{ s.group_name or '' }}">
+              <small class="text-muted">e.g. IT1, IT2, IT3, MK10, ACC4</small>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Hall of Residence</label>
+              <input type="text" name="hall" class="form-control"
+                     placeholder="e.g. Yaa Asantewaa" value="{{ s.hall or '' }}">
+            </div>
+            <div class="col-12 mt-2 d-flex gap-2">
+              <button type="submit" class="btn btn-primary fw-bold px-4">
+                <i class="bi bi-check-circle me-1"></i>{{ "Register Student" if action=="add" else "Save Changes" }}
+              </button>
+              <a href="{{ url_for('admin.students') }}" class="btn btn-light">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

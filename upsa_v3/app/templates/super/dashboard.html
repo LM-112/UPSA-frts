@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Super Admin Dashboard — UPSA FRT{% endblock %}
+{% block sidebar %}
+<div class="nav-section">System</div>
+<a href="{{ url_for('super_.dashboard') }}" class="nav-item active"><i class="bi bi-grid-1x2"></i>Dashboard</a>
+<div class="nav-section">Structure</div>
+<a href="{{ url_for('super_.faculties') }}" class="nav-item"><i class="bi bi-diagram-3"></i>Faculties</a>
+<a href="{{ url_for('super_.users') }}" class="nav-item"><i class="bi bi-people"></i>All Users</a>
+<div class="nav-section">Hardware</div>
+<a href="{{ url_for('super_.dashboard') }}#terminals" class="nav-item"><i class="bi bi-camera"></i>Terminals</a>
+<a href="{{ url_for('super_.register_device') }}" class="nav-item"><i class="bi bi-plus-circle"></i>Register Terminal</a>
+<div class="nav-section">Logs</div>
+<a href="{{ url_for('super_.dashboard') }}#events" class="nav-item"><i class="bi bi-activity"></i>Event Logs</a>
+{% endblock %}
+{% block head_extra %}
+<style>
+.dash-title{font-size:1.4rem;font-weight:800;color:#002147;margin-bottom:2px;}
+.dash-sub{font-size:.82rem;color:#6b7280;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kpi-box{background:#fff;border-radius:12px;border:1px solid #f0f0f0;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative;}
+.kpi-box-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:14px;}
+.kpi-box-value{font-size:2rem;font-weight:800;line-height:1;color:#002147;}
+.kpi-box-label{font-size:.76rem;color:#6b7280;margin-top:5px;font-weight:500;}
+.kpi-box-arrow{position:absolute;bottom:16px;right:16px;font-size:.75rem;font-weight:600;color:#9ca3af;text-decoration:none;}
+.kpi-box-arrow:hover{color:#002147;}
+.sec-title{font-size:1rem;font-weight:700;color:#002147;margin-bottom:14px;}
+.see-all{font-size:.78rem;font-weight:600;color:#002147;text-decoration:none;}
+.att-table{width:100%;border-collapse:collapse;}
+.att-table th{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:#9ca3af;padding:10px 14px;border-bottom:1px solid #f0f0f0;text-align:left;}
+.att-table td{padding:11px 14px;border-bottom:1px solid #fafafa;font-size:.83rem;color:#374151;}
+.att-table tbody tr:hover{background:#fafafa;}
+.panel{background:#fff;border-radius:12px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;margin-bottom:16px;}
+.panel-head{padding:14px 20px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <div class="dash-title">System Overview</div>
+    <div class="dash-sub">Global Administration — {{ ACADEMIC_YEAR }}</div>
+  </div>
+  <a href="{{ url_for('super_.register_device') }}" class="btn btn-sm btn-primary">
+    <i class="bi bi-plus-circle me-1"></i>Register Terminal
+  </a>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-row">
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#EEF2FF;color:#002147;"><i class="bi bi-people-fill"></i></div>
+    <div class="kpi-box-value">{{ stats.total_students }}</div>
+    <div class="kpi-box-label">Total Students</div>
+    <span class="kpi-box-arrow">enrolled</span>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#FFFBEB;color:#C89A2A;"><i class="bi bi-camera-fill"></i></div>
+    <div class="kpi-box-value" style="color:#C89A2A;">{{ device_statuses|length }}</div>
+    <div class="kpi-box-label">Active Devices</div>
+    <span class="kpi-box-arrow">terminals</span>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#F0FDF4;color:#16a34a;"><i class="bi bi-calendar3-event-fill"></i></div>
+    <div class="kpi-box-value" style="color:#16a34a;">{{ stats.sessions_today }}</div>
+    <div class="kpi-box-label">Sessions Today</div>
+    <span class="kpi-box-arrow">scheduled</span>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-box-icon" style="background:#F0F9FF;color:#0891b2;"><i class="bi bi-activity"></i></div>
+    <div class="kpi-box-value" style="color:#0891b2;">99.6%</div>
+    <div class="kpi-box-label">System Uptime</div>
+    <span class="kpi-box-arrow">this month</span>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Faculties table -->
+  <div class="col-md-7">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="sec-title mb-0">Faculties &amp; Departments</span>
+      </div>
+      <table class="att-table">
+        <thead><tr><th>Faculty</th><th>Depts</th><th>Programmes</th><th>Students</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for f in faculties %}
+          <tr>
+            <td><div style="font-weight:600;color:#002147;">{{ f.name }}</div></td>
+            <td style="text-align:center;font-weight:700;">{{ f.dept_count }}</td>
+            <td style="text-align:center;font-weight:700;">{{ f.prog_count }}</td>
+            <td style="text-align:center;font-weight:700;">{{ f.student_count }}</td>
+            <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">Active</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Registered terminals -->
+    <div class="panel" id="terminals">
+      <div class="panel-head">
+        <span class="sec-title mb-0">Registered Terminals</span>
+      </div>
+      <table class="att-table">
+        <thead><tr><th>Device ID</th><th>Room</th><th>IP Address</th><th>Model</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for ds in device_statuses %}
+          <tr>
+            <td><code style="font-size:.8rem;color:#002147;">HIK-{{ '%03d'|format(ds.id) }}</code></td>
+            <td>{{ ds.room or ds.name }}</td>
+            <td style="font-size:.82rem;">{{ ds.ip_address }}</td>
+            <td style="font-size:.78rem;color:#6b7280;">{{ ds.model }}</td>
+            <td>
+              {% if ds.online %}
+              <span style="display:inline-flex;align-items:center;gap:5px;">
+                <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
+                <span style="color:#16a34a;font-size:.8rem;font-weight:600;">Online</span>
+              </span>
+              {% else %}
+              <span style="display:inline-flex;align-items:center;gap:5px;">
+                <span style="width:7px;height:7px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
+                <span style="color:#dc2626;font-size:.8rem;font-weight:600;">Offline</span>
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:24px;">No terminals registered</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right: events + users -->
+  <div class="col-md-5">
+    <div class="panel" id="events">
+      <div class="panel-head">
+        <span class="sec-title mb-0">Recent Recognition Events</span>
+      </div>
+      <table class="att-table">
+        <thead><tr><th>Time</th><th>Employee ID</th><th>Similarity</th><th>Processed</th></tr></thead>
+        <tbody>
+          {% for e in events %}
+          <tr>
+            <td style="font-size:.78rem;color:#6b7280;">{{ e.occurred_at[:16] }}</td>
+            <td><code style="font-size:.8rem;">{{ e.employee_id_seen }}</code></td>
+            <td>{{ '%.0f%%'|format((e.similarity or 0)*100) if e.similarity else '—' }}</td>
+            <td>{% if e.processed %}<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:700;">Yes</span>{% else %}<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:700;">No</span>{% endif %}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:24px;">No events yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="sec-title mb-0">System Users</span>
+        <a href="{{ url_for('super_.users') }}" class="see-all">See All</a>
+      </div>
+      <table class="att-table">
+        <thead><tr><th>Name</th><th>Role</th><th>Last Login</th></tr></thead>
+        <tbody>
+          {% for u in users[:8] %}
+          <tr>
+            <td style="font-weight:600;font-size:.83rem;">{{ u.full_name }}</td>
+            <td><span style="background:#EEF2FF;color:#002147;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:600;">{{ u.role }}</span></td>
+            <td style="font-size:.78rem;color:#6b7280;">{{ u.last_login_at[:10] if u.last_login_at else 'Never' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

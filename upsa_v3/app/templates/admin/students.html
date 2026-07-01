@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Students — Admin{% endblock %}
+{% block sidebar %}{% include "admin/_sidebar.html" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0" style="color:var(--upsa-navy);">Students</h3>
+  <a href="{{ url_for('admin.student_add') }}" class="btn btn-primary">
+    <i class="bi bi-person-plus me-1"></i>Register New Student
+  </a>
+</div>
+<div class="card" style="border-radius:10px;">
+  <div class="card-body py-2 px-3">
+    <form method="GET" class="d-flex gap-2 flex-wrap">
+      <input type="text" name="q" value="{{ q }}" class="form-control" style="max-width:220px;" placeholder="Name or index number…">
+      <select name="group" class="form-select" style="max-width:110px;">
+        <option value="">All Groups</option>
+        {% for g in groups %}
+        <option value="{{ g }}" {% if sel_group==g %}selected{% endif %}>{{ g }}</option>
+        {% endfor %}
+      </select>
+      <select name="level" class="form-select" style="max-width:115px;">
+        <option value="">All Levels</option>
+        {% for l in [100,200,300,400] %}
+        <option value="{{ l }}" {% if sel_level|int==l %}selected{% endif %}>Level {{ l }}</option>
+        {% endfor %}
+      </select>
+      <select name="dept" class="form-select" style="max-width:175px;">
+        <option value="">All Departments</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}" {% if sel_dept==d.id|string %}selected{% endif %}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-primary px-3">Filter</button>
+      <a href="{{ url_for('admin.students') }}" class="btn btn-light">Reset</a>
+    </form>
+  </div>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="data-table" style="font-size:.84rem;">
+      <thead><tr>
+        <th>Index No.</th><th>Full Name</th><th>Programme</th>
+        <th>Department</th><th>Group</th><th>Level</th>
+        <th>Consent</th><th>FRT</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td><code style="font-size:.82rem;">{{ s.index_number }}</code></td>
+          <td>
+            <div class="fw-semibold">{{ s.full_name }}</div>
+            <div class="text-muted" style="font-size:.75rem;">{{ s.email }}</div>
+          </td>
+          <td style="font-size:.8rem;">
+            <div>{{ s.prog_code or "—" }}</div>
+            <div class="text-muted" style="font-size:.72rem;">{{ s.prog_name[:28] if s.prog_name else "" }}</div>
+          </td>
+          <td style="font-size:.8rem;">{{ s.dept_name or "—" }}</td>
+          <td>{% if s.group_name %}<span class="badge bg-secondary">{{ s.group_name }}</span>{% else %}—{% endif %}</td>
+          <td>{% if s.level %}<span class="badge bg-light text-dark border">Lvl {{ s.level }}</span>{% else %}—{% endif %}</td>
+          <td>{% if s.consent_given %}<span class="badge badge-present">Yes</div>
+              {% else %}<span class="badge badge-absent">No</span>{% endif %}</td>
+          <td>{% if s.enrolled_on_terminal %}<span class="badge badge-present">Enrolled</div>
+              {% else %}<span class="badge bg-secondary">Pending</span>{% endif %}</td>
+          <td>
+            <div class="d-flex gap-1 flex-wrap">
+              <a href="{{ url_for('admin.student_edit', sid=s.id) }}" class="btn btn-xs btn-outline-primary" style="padding:2px 8px;font-size:.75rem;">Edit</a>
+              {% if s.consent_given and not s.enrolled_on_terminal %}
+              <form method="POST" action="{{ url_for('admin.enrol_student', sid=s.id) }}">
+                <button class="btn btn-xs btn-success" style="padding:2px 8px;font-size:.75rem;">Enrol</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center text-muted py-4">No students found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
